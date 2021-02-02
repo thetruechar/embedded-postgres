@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"syscall"
 
 	"github.com/lib/pq"
@@ -41,8 +42,12 @@ func defaultInitDatabase(binaryExtractLocation, username, password, locale strin
 	postgresInitDbProcess.Stdout = logger
 	uid := os.Getenv("POSTGRES_UID")
 	if uid != "" {
+		i, err := strconv.ParseInt(uid, 10, 64)
+		if err != nil {
+			return err
+		}
 		postgresInitDbProcess.SysProcAttr = &syscall.SysProcAttr{}
-		postgresInitDbProcess.SysProcAttr.Credential = &syscall.Credential{Uid: 999, Gid: 999}
+		postgresInitDbProcess.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(i), Gid: uint32(i)}
 	}
 
 	if err := postgresInitDbProcess.Run(); err != nil {
