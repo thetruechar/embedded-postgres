@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"syscall"
@@ -38,8 +39,11 @@ func defaultInitDatabase(binaryExtractLocation, username, password, locale strin
 	postgresInitDbProcess := exec.Command(postgresInitDbBinary, args...)
 	postgresInitDbProcess.Stderr = logger
 	postgresInitDbProcess.Stdout = logger
-	postgresInitDbProcess.SysProcAttr = &syscall.SysProcAttr{}
-	postgresInitDbProcess.SysProcAttr.Credential = &syscall.Credential{Uid: 999, Gid: 999}
+	uid := os.Getenv("POSTGRES_UID")
+	if uid != "" {
+		postgresInitDbProcess.SysProcAttr = &syscall.SysProcAttr{}
+		postgresInitDbProcess.SysProcAttr.Credential = &syscall.Credential{Uid: 999, Gid: 999}
+	}
 
 	if err := postgresInitDbProcess.Run(); err != nil {
 		return fmt.Errorf("unable to init database using: %s", postgresInitDbProcess.String())
